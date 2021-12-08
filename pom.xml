@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>dev.cerus.blockbind</groupId>
+    <artifactId>parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0</version>
+
+    <name>Block Bind</name>
+    <description>Synchronizing distributed Minecraft servers</description>
+
+    <modules>
+        <module>api</module>
+        <module>bukkit</module>
+    </modules>
+
+    <properties>
+        <blockbind.filename>blockbind</blockbind.filename>
+        <maven.compiler.source>16</maven.compiler.source>
+        <maven.compiler.target>16</maven.compiler.target>
+    </properties>
+
+    <developers>
+        <developer>
+            <id>cerus</id>
+            <name>Maximilian Dorn</name>
+            <email>m.dorn.2003@web.de</email>
+            <url>https://cerus.dev</url>
+            <timezone>CET</timezone>
+        </developer>
+    </developers>
+
+</project>

@@ -1,0 +1,8 @@
+name: ${parent.name}
+description: Synchronizing distributed Minecraft servers
+version: ${parent.version}
+authors: [ Cerus ]
+
+main: dev.cerus.blockbind.bukkit.BlockBindBukkitPlugin
+api-version: 1.16
+database: true
