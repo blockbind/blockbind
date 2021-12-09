@@ -19,6 +19,7 @@
 
     <properties>
         <blockbind.filename>blockbind</blockbind.filename>
+        <blockbind.name.spaceless>BlockBind</blockbind.name.spaceless>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
     </properties>

@@ -1,4 +1,4 @@
-name: ${parent.name}
+name: ${blockbind.name.spaceless}
 description: Synchronizing distributed Minecraft servers
 version: ${parent.version}
 authors: [ Cerus ]
