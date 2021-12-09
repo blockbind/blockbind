@@ -33,9 +33,10 @@ public class BufferUtilTest {
         for (int i = 0; i < 10; i++) {
             final ByteBuf buffer = Unpooled.buffer();
             final String str = IntStream.range(0, 64)
-                    .mapToObj($ -> (char) (random.nextInt('z') + 'a'))
+                    .mapToObj($ -> (char) (random.nextInt('z' - 'a') + 'a'))
                     .map(String::valueOf)
                     .collect(Collectors.joining());
+            System.out.println(str);
             BufferUtil.writeString(buffer, str);
             buffer.resetReaderIndex();
             final String readStr = BufferUtil.readString(buffer);
