@@ -1,6 +1,7 @@
 package dev.cerus.blockbind.api.redis;
 
 import dev.cerus.blockbind.api.compression.CompressionUtil;
+import dev.cerus.blockbind.api.identity.Identity;
 import dev.cerus.blockbind.api.packet.Packet;
 import dev.cerus.blockbind.api.packet.PacketRegistry;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
@@ -11,31 +12,35 @@ import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> implements RedisCommunicator<Packet> {
 
+    public static final String CHANNEL_PLAYER = "blockbind:player";
+
     private final RedisPubSubAsyncCommands<String, String> pubCmd;
-    private final String channel;
-    private BiConsumer<Packet, Throwable> listener;
+    private final RedisPubSubAsyncCommands<String, String> subCmd;
+    private final Map<String, Set<BiConsumer<Packet, Throwable>>> channelSubscribers;
 
     public PacketRedisCommunicator(final StatefulRedisPubSubConnection<String, String> pubCon,
-                                   final StatefulRedisPubSubConnection<String, String> subCon,
-                                   final String channel) {
+                                   final StatefulRedisPubSubConnection<String, String> subCon) {
+        if (Identity.getIdentity() == null) {
+            throw new IllegalStateException("Identity not set");
+        }
+
         this.pubCmd = pubCon.async();
         subCon.addListener(this);
-        subCon.async().subscribe(channel);
-        this.channel = channel;
-
-        this.listener = (packet, throwable) -> {
-            System.err.printf("Failed to read packet: %s%n", throwable.getMessage());
-            throwable.printStackTrace();
-        };
+        this.subCmd = subCon.async();
+        this.channelSubscribers = new HashMap<>();
     }
 
     @Override
-    public CompletableFuture<Void> send(final Packet packet) {
+    public CompletableFuture<Void> send(final String channel, final Packet packet) {
         final CompletableFuture<Void> future = new CompletableFuture<>();
 
         try {
@@ -44,9 +49,10 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
             final byte[] array = buf.array();
             final byte[] compressed = CompressionUtil.compress(array);
             final String b64Encode = Base64.getEncoder().encodeToString(compressed);
-            final String str = array.length + ":" + b64Encode;
+            final String str = Identity.getIdentity().getName() + ":" + array.length + ":" + b64Encode;
             buf.release();
-            this.pubCmd.publish(this.channel, str).whenComplete((aLong, throwable) -> {
+
+            this.pubCmd.publish(channel, str).whenComplete((aLong, throwable) -> {
                 if (throwable != null) {
                     future.completeExceptionally(throwable);
                 } else {
@@ -61,21 +67,29 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
     }
 
     @Override
-    public void listen(final BiConsumer<Packet, Throwable> callback) {
-        this.listener = callback;
+    public void listen(final String channel, final BiConsumer<Packet, Throwable> callback) {
+        final Set<BiConsumer<Packet, Throwable>> subs = this.channelSubscribers
+                .computeIfAbsent(channel, $ -> new HashSet<>());
+        subs.add(callback);
     }
 
     @Override
     public void message(final String channel, final String message) {
-        if (this.listener != null) {
-            final String[] split = message.split(":", 2);
-            final int len = Integer.parseInt(split[0]);
-            final byte[] b64Decode = Base64.getDecoder().decode(split[1].getBytes(StandardCharsets.UTF_8));
+        final Set<BiConsumer<Packet, Throwable>> subs = this.channelSubscribers.get(channel);
+        if (subs != null && !subs.isEmpty()) {
+            final String[] split = message.split(":", 3);
+            final String srv = split[0];
+            if (srv.equals(Identity.getIdentity().getName())) {
+                return;
+            }
+
+            final int len = Integer.parseInt(split[1]);
+            final byte[] b64Decode = Base64.getDecoder().decode(split[2].getBytes(StandardCharsets.UTF_8));
             final byte[] decompressed;
             try {
                 decompressed = CompressionUtil.decompress(b64Decode, len);
             } catch (final IOException e) {
-                this.listener.accept(null, e);
+                subs.forEach(listener -> listener.accept(null, e));
                 return;
             }
 
@@ -85,9 +99,9 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
                 final Packet packet = PacketRegistry.getPacketById(id);
                 packet.read(buf);
                 buf.release();
-                this.listener.accept(packet, null);
+                subs.forEach(listener -> listener.accept(packet, null));
             } catch (final NullPointerException | IndexOutOfBoundsException e) {
-                this.listener.accept(null, e);
+                subs.forEach(listener -> listener.accept(null, e));
             }
         }
     }

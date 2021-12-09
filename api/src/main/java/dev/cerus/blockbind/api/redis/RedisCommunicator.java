@@ -5,8 +5,8 @@ import java.util.function.BiConsumer;
 
 public interface RedisCommunicator<T> {
 
-    CompletableFuture<Void> send(T t);
+    CompletableFuture<Void> send(String channel, T t);
 
-    void listen(BiConsumer<T, Throwable> callback);
+    void listen(String channel, BiConsumer<T, Throwable> callback);
 
 }
