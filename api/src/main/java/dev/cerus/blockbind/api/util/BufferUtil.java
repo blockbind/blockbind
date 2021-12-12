@@ -1,9 +1,12 @@
 package dev.cerus.blockbind.api.util;
 
+import com.google.gson.JsonParser;
+import dev.cerus.blockbind.api.player.PlayerWrapper;
 import io.netty.buffer.ByteBuf;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -73,6 +76,27 @@ public class BufferUtil {
             keyFun.accept(buffer, a);
             valFun.accept(buffer, b);
         });
+    }
+
+    public static <T> Optional<T> readOptional(final ByteBuf buffer, final Function<ByteBuf, T> valFun) {
+        final boolean present = buffer.readBoolean();
+        if (present) {
+            return Optional.of(valFun.apply(buffer));
+        }
+        return Optional.empty();
+    }
+
+    public static <T> void writeOptional(final ByteBuf buffer, final Optional<T> optional, final BiConsumer<ByteBuf, T> valFun) {
+        buffer.writeBoolean(optional.isPresent());
+        optional.ifPresent(t -> valFun.accept(buffer, t));
+    }
+
+    public static PlayerWrapper readPlayer(final ByteBuf buffer) {
+        return PlayerWrapper.parse(JsonParser.parseString(readString(buffer)).getAsJsonObject());
+    }
+
+    public static void writePlayer(final ByteBuf buffer, final PlayerWrapper player) {
+        writeString(buffer, player.encode());
     }
 
 }
