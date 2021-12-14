@@ -2,6 +2,9 @@ package dev.cerus.blockbind.api.compression;
 
 import com.github.luben.zstd.Zstd;
 
+/**
+ * Zstd compression implementation using github.com/facebook/zstd and github.com/luben/zstd-jni
+ */
 public class ZstdCompression implements Compression {
 
     @Override
