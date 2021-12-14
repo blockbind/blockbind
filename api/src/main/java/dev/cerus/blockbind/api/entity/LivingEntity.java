@@ -2,6 +2,11 @@ package dev.cerus.blockbind.api.entity;
 
 import java.util.UUID;
 
+/**
+ * Represents a "living" game object (like players, animals or monsters)
+ * <p>
+ * All the metadata was implemented using wiki.vg
+ */
 public abstract class LivingEntity extends Entity {
 
     public static final int META_KEY_HAND = 8;

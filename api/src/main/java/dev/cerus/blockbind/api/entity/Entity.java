@@ -2,8 +2,14 @@ package dev.cerus.blockbind.api.entity;
 
 import java.util.UUID;
 
+/**
+ * Represents a complex and dynamic game object
+ * <p>
+ * All the metadata was implemented using wiki.vg
+ */
 public abstract class Entity {
 
+    /* Metadata indexes */
     public static final int META_KEY_MASK = 0;
     public static final int META_KEY_AIR = 1;
     public static final int META_KEY_CUSTOM_NAME = 2;
