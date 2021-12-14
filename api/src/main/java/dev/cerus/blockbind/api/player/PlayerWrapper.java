@@ -4,34 +4,35 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.LongSerializationPolicy;
+import dev.cerus.blockbind.api.entity.LivingEntity;
+import dev.cerus.blockbind.api.entity.Metadata;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class PlayerWrapper {
+public class PlayerWrapper extends LivingEntity {
+
+    public static final int META_KEY_SKIN = 17;
 
     private static final Gson GSON = new GsonBuilder()
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .create();
 
-    private final UUID uuid;
     private final String name;
-    private final int entityId;
     private final Map<String, String> properties;
     private final Map<String, String> propertySignatures;
-    private double x;
-    private double y;
-    private double z;
-    private float yaw;
-    private float pitch;
     private int gamemode;
     private int ping;
     private String displayName;
 
     public PlayerWrapper(final UUID uuid, final String name, final int entityId, final Map<String, String> properties, final Map<String, String> propertySignatures) {
-        this.uuid = uuid;
+        super(uuid, entityId);
         this.name = name;
-        this.entityId = entityId;
         this.properties = properties;
         this.propertySignatures = propertySignatures;
     }
@@ -49,9 +50,8 @@ public class PlayerWrapper {
                          final int gamemode,
                          final int ping,
                          final String displayName) {
-        this.uuid = uuid;
+        super(uuid, entityId);
         this.name = name;
-        this.entityId = entityId;
         this.properties = properties;
         this.propertySignatures = propertySignatures;
         this.x = x;
@@ -79,7 +79,7 @@ public class PlayerWrapper {
             signatures.put(key, sigsObj.get(key).getAsString());
         }
 
-        return new PlayerWrapper(
+        final PlayerWrapper player = new PlayerWrapper(
                 new UUID(
                         uuidObj.get("msb").getAsLong(),
                         uuidObj.get("lsb").getAsLong()
@@ -97,6 +97,16 @@ public class PlayerWrapper {
                 playerObj.get("ping").getAsInt(),
                 playerObj.has("display_name") ? playerObj.get("display_name").getAsString() : null
         );
+
+        if (playerObj.has("meta")) {
+            final String metaStr = playerObj.get("meta").getAsString();
+            final byte[] metaBytes = Base64.getDecoder().decode(metaStr.getBytes(StandardCharsets.UTF_8));
+            final ByteBuf byteBuf = Unpooled.wrappedBuffer(metaBytes);
+            player.metadata.read(byteBuf);
+            byteBuf.release();
+        }
+
+        return player;
     }
 
     public String encode() {
@@ -130,6 +140,13 @@ public class PlayerWrapper {
             object.addProperty("display_name", this.displayName);
         }
 
+        final ByteBuf buffer = Unpooled.buffer();
+        this.metadata.write(buffer);
+        final byte[] metaBytes = Arrays.copyOf(buffer.array(), buffer.writerIndex());
+        buffer.release();
+        final String metaStr = Base64.getEncoder().encodeToString(metaBytes);
+        object.addProperty("meta", metaStr);
+
         return GSON.toJson(object);
     }
 
@@ -148,18 +165,77 @@ public class PlayerWrapper {
         this.ping = player.ping;
         this.gamemode = player.gamemode;
         this.displayName = player.displayName;
+
+        this.metadata.overwrite(player.metadata);
     }
 
-    public UUID getUuid() {
-        return this.uuid;
+    public byte getSkinMask() {
+        return (byte) this.metadata.getSafe(17, () ->
+                new Metadata.Entry(Metadata.EntryType.BYTE, (byte) 0)).getValue();
+    }
+
+    public void setSkinMask(final byte val) {
+        this.metadata.set(17, new Metadata.Entry(Metadata.EntryType.BYTE, val));
+    }
+
+    public boolean isCapeEnabled() {
+        return (this.getSkinMask() & 0x01) == 0x01;
+    }
+
+    public void setCapeEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x01) : (byte) (this.getSkinMask() & (byte) ~0x01));
+    }
+
+    public boolean isJacketEnabled() {
+        return (this.getSkinMask() & 0x02) == 0x02;
+    }
+
+    public void setJacketEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x02) : (byte) (this.getSkinMask() & (byte) ~0x02));
+    }
+
+    public boolean isLeftSleeveEnabled() {
+        return (this.getSkinMask() & 0x04) == 0x04;
+    }
+
+    public void setLeftSleeveEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x04) : (byte) (this.getSkinMask() & (byte) ~0x04));
+    }
+
+    public boolean isRightSleeveEnabled() {
+        return (this.getSkinMask() & 0x08) == 0x08;
+    }
+
+    public void setRightSleeveEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x08) : (byte) (this.getSkinMask() & (byte) ~0x08));
+    }
+
+    public boolean isLeftLegEnabled() {
+        return (this.getSkinMask() & 0x10) == 0x10;
+    }
+
+    public void setLeftLegEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x10) : (byte) (this.getSkinMask() & (byte) ~0x10));
+    }
+
+    public boolean isRightLegEnabled() {
+        return (this.getSkinMask() & 0x20) == 0x20;
+    }
+
+    public void setRightLegEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x20) : (byte) (this.getSkinMask() & (byte) ~0x20));
+    }
+
+    public boolean isHatEnabled() {
+        return (this.getSkinMask() & 0x40) == 0x40;
+    }
+
+    public void setHatEnabled(final boolean val) {
+        this.setSkinMask(val ? (byte) (this.getSkinMask() | (byte) 0x40) : (byte) (this.getSkinMask() & (byte) ~0x40));
     }
 
     public String getName() {
         return this.name;
-    }
-
-    public int getEntityId() {
-        return this.entityId;
     }
 
     public Map<String, String> getProperties() {
@@ -168,46 +244,6 @@ public class PlayerWrapper {
 
     public Map<String, String> getPropertySignatures() {
         return this.propertySignatures;
-    }
-
-    public double getX() {
-        return this.x;
-    }
-
-    public void setX(final double x) {
-        this.x = x;
-    }
-
-    public double getY() {
-        return this.y;
-    }
-
-    public void setY(final double y) {
-        this.y = y;
-    }
-
-    public double getZ() {
-        return this.z;
-    }
-
-    public void setZ(final double z) {
-        this.z = z;
-    }
-
-    public float getYaw() {
-        return this.yaw;
-    }
-
-    public void setYaw(final float yaw) {
-        this.yaw = yaw;
-    }
-
-    public float getPitch() {
-        return this.pitch;
-    }
-
-    public void setPitch(final float pitch) {
-        this.pitch = pitch;
     }
 
     public int getGamemode() {

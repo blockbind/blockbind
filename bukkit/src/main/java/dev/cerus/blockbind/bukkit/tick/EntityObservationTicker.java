@@ -62,6 +62,7 @@ public class EntityObservationTicker implements Ticker {
                             otherPlayer.getPitch()
                     ), List.of(player.getUuid()));
                     plugin.getAdapter().sendHeadRot(otherPlayer, List.of(player.getUuid()));
+                    plugin.getAdapter().sendMetadata(otherPlayer.getEntityId(), otherPlayer.getMetadata(), List.of(player.getUuid()));
                 } else if (!inRange && EntityObservers.isObserving(player.getUuid(), otherPlayer.getEntityId())) {
                     EntityObservers.getObservedEntities(player.getUuid()).remove(otherPlayer.getEntityId());
                     /*packetCommunicator.send(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityDestroyPacket(

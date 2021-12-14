@@ -11,6 +11,8 @@ import dev.cerus.blockbind.api.threading.Threading;
 import dev.cerus.blockbind.bukkit.command.BlockBindCommand;
 import dev.cerus.blockbind.bukkit.listener.packet.EntityPacketListener;
 import dev.cerus.blockbind.bukkit.listener.packet.PlayerPacketListener;
+import dev.cerus.blockbind.bukkit.listener.server.PlayerCrouchListener;
+import dev.cerus.blockbind.bukkit.listener.server.PlayerElytraListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerJoinListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerMoveListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerQuitListener;
@@ -90,6 +92,8 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
         pluginManager.registerEvents(new PlayerJoinListener(this, packetCommunicator, valueCommunicator), this);
         pluginManager.registerEvents(new PlayerQuitListener(this, packetCommunicator, valueCommunicator), this);
         pluginManager.registerEvents(new PlayerMoveListener(this, packetCommunicator), this);
+        pluginManager.registerEvents(new PlayerCrouchListener(this, packetCommunicator), this);
+        pluginManager.registerEvents(new PlayerElytraListener(this, packetCommunicator), this);
 
         final BlockBindTickTask tickTask = new BlockBindTickTask(this, packetCommunicator, valueCommunicator);
         tickTask.start(TICK_DURATION);

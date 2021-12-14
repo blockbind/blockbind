@@ -9,6 +9,7 @@ import dev.cerus.blockbind.bukkit.BlockBindBukkitPlugin;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
@@ -22,7 +23,7 @@ public class PlayerMoveListener implements Listener {
         this.packetCommunicator = packetCommunicator;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(final PlayerMoveEvent event) {
         final Player player = event.getPlayer();
         final PlayerWrapper wrapper = this.plugin.getUuidPlayerMap().get(player.getUniqueId());

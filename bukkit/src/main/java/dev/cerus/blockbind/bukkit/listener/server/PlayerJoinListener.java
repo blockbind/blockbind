@@ -1,5 +1,6 @@
 package dev.cerus.blockbind.bukkit.listener.server;
 
+import dev.cerus.blockbind.api.packet.entity.EntityMetadataPacket;
 import dev.cerus.blockbind.api.packet.player.PlayerInfoPacket;
 import dev.cerus.blockbind.api.player.PlayerWrapper;
 import dev.cerus.blockbind.api.redis.PacketRedisCommunicator;
@@ -56,11 +57,20 @@ public class PlayerJoinListener implements Listener {
                     player.getPing(),
                     ComponentSerializer.toString(new TextComponent(player.getDisplayName()))
             );
+            wrapper.setSkinMask(this.plugin.getAdapter().getSkinParts(player.getUniqueId()));
+            wrapper.setPose((byte) player.getPose().ordinal());
+
             this.plugin.getNameUuidMap().put(player.getName(), player.getUniqueId());
             this.plugin.getEntityIdUuidMap().put(eid, player.getUniqueId());
             this.plugin.getUuidPlayerMap().put(player.getUniqueId(), wrapper);
-            this.valueCommunicator.addPlayer(wrapper).whenComplete(($, t) ->
-                    this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_PLAYER, PlayerInfoPacket.addPlayer(wrapper)));
+            this.valueCommunicator.addPlayer(wrapper).whenComplete(($, t) -> {
+                this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_PLAYER, PlayerInfoPacket.addPlayer(wrapper));
+                this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityMetadataPacket(
+                        wrapper.getEntityId(),
+                        wrapper.getMetadata()
+                ));
+                wrapper.getMetadata().clean();
+            });
         });
     }
 

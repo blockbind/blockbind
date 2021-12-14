@@ -2,6 +2,9 @@ package dev.cerus.blockbind.platform;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import dev.cerus.blockbind.api.entity.Entity;
+import dev.cerus.blockbind.api.entity.LivingEntity;
+import dev.cerus.blockbind.api.entity.Metadata;
 import dev.cerus.blockbind.api.packet.entity.EntityMovePacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMoveRotPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityRotPacket;
@@ -10,9 +13,12 @@ import dev.cerus.blockbind.api.packet.player.SpawnPlayerPacket;
 import dev.cerus.blockbind.api.platform.PlatformAdapter;
 import dev.cerus.blockbind.api.player.PlayerWrapper;
 import dev.cerus.unref.ObjectBuilder;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.minecraft.network.chat.IChatBaseComponent;
@@ -20,14 +26,62 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntity;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo;
+import net.minecraft.network.syncher.DataWatcher;
+import net.minecraft.network.syncher.DataWatcherObject;
+import net.minecraft.network.syncher.DataWatcherRegistry;
+import net.minecraft.network.syncher.DataWatcherSerializer;
+import net.minecraft.world.entity.EntityPose;
 import net.minecraft.world.level.EnumGamemode;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 public class PlatformAdapter18R1 implements PlatformAdapter {
+
+    private final Map<Metadata.EntryType, DataWatcherSerializer<?>> serializerMap = Map.of(
+            Metadata.EntryType.BYTE, DataWatcherRegistry.a,
+            Metadata.EntryType.INT, DataWatcherRegistry.b,
+            Metadata.EntryType.LONG, DataWatcherRegistry.b, // Will probably cause problems
+            Metadata.EntryType.FLOAT, DataWatcherRegistry.c,
+            Metadata.EntryType.DOUBLE, DataWatcherRegistry.c, // Will probably cause problems
+            Metadata.EntryType.STRING, DataWatcherRegistry.d,
+            Metadata.EntryType.CHAT, DataWatcherRegistry.e,
+            Metadata.EntryType.OPTIONAL_CHAT, DataWatcherRegistry.f,
+            Metadata.EntryType.BOOLEAN, DataWatcherRegistry.i,
+            Metadata.EntryType.POSE, DataWatcherRegistry.s
+    );
+    private final Map<Integer, Integer> metaKeyIndexMap = Map.of(
+            Entity.META_KEY_MASK, 0,
+            Entity.META_KEY_AIR, 1,
+            Entity.META_KEY_CUSTOM_NAME, 2,
+            Entity.META_KEY_CUSTOM_NAME_VISIBLE, 3,
+            Entity.META_KEY_SILENT, 4,
+            Entity.META_KEY_NO_GRAVITY, 5,
+            Entity.META_KEY_POSE, 6,
+
+            LivingEntity.META_KEY_HAND, 8,
+            LivingEntity.META_KEY_HEALTH, 9,
+
+            PlayerWrapper.META_KEY_SKIN, 17
+    );
+
+    @Override
+    public byte getSkinParts(final UUID uuid) {
+        final Player player = Bukkit.getPlayer(uuid);
+        final DataWatcher dataWatcher;
+        try {
+            final Field field = Entity.class.getDeclaredField("Z");
+            field.setAccessible(true);
+            dataWatcher = (DataWatcher) field.get(((CraftPlayer) player).getHandle());
+        } catch (final NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        return dataWatcher.a(DataWatcherRegistry.a.a(this.metaKeyIndexMap.get(PlayerWrapper.META_KEY_SKIN)));
+    }
 
     @Override
     public Map<String, String> getPlayerProperties(final UUID uuid) {
@@ -170,6 +224,42 @@ public class PlatformAdapter18R1 implements PlatformAdapter {
     @Override
     public void destroyEntity(final int[] ids, final Collection<UUID> receiver) {
         final Object nmsPacket = new PacketPlayOutEntityDestroy(ids);
+        this.broadcastPacket(nmsPacket, receiver.stream()
+                .map(Bukkit::getPlayer)
+                .collect(Collectors.toList()));
+    }
+
+    @Override
+    public void sendMetadata(final int eid, final Metadata metadata, final Collection<UUID> receiver) {
+        final List<DataWatcher.Item<?>> items = new ArrayList<>();
+        metadata.forEach((idx, entry) -> {
+            final DataWatcherSerializer<Object> serializer = (DataWatcherSerializer<Object>) this.serializerMap.get(entry.getType());
+            final DataWatcherObject<Object> obj = serializer.a((int) this.metaKeyIndexMap.get(idx));
+            Object val = entry.getValue();
+            if (entry.getType() == Metadata.EntryType.CHAT) {
+                val = IChatBaseComponent.ChatSerializer.a((String) val);
+            } else if (entry.getType() == Metadata.EntryType.OPTIONAL_CHAT) {
+                val = entry.getValue() == null ? Optional.empty() : Optional.ofNullable(IChatBaseComponent.ChatSerializer.a((String) val));
+            } else if (entry.getType() == Metadata.EntryType.POSE) {
+                val = switch ((byte) entry.getValue()) {
+                    case 1 -> EntityPose.b;
+                    case 2 -> EntityPose.c;
+                    case 3 -> EntityPose.d;
+                    case 4 -> EntityPose.e;
+                    case 5 -> EntityPose.f;
+                    case 7 -> EntityPose.g;
+                    case 6 -> EntityPose.h;
+                    default -> EntityPose.a;
+                };
+            }
+            items.add(new DataWatcher.Item<>(obj, val));
+        });
+        final Object nmsPacket = new ObjectBuilder(PacketPlayOutEntityMetadata.class)
+                .unsafeInstantiate()
+                .modify()
+                .field("a", eid)
+                .field("b", items)
+                .finish();
         this.broadcastPacket(nmsPacket, receiver.stream()
                 .map(Bukkit::getPlayer)
                 .collect(Collectors.toList()));

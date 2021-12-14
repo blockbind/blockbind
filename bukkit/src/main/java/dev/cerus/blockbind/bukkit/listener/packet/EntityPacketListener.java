@@ -2,18 +2,21 @@ package dev.cerus.blockbind.bukkit.listener.packet;
 
 import dev.cerus.blockbind.api.packet.Packet;
 import dev.cerus.blockbind.api.packet.entity.EntityDestroyPacket;
+import dev.cerus.blockbind.api.packet.entity.EntityMetadataPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMovePacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMoveRotPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityRotPacket;
 import dev.cerus.blockbind.api.player.PlayerWrapper;
 import dev.cerus.blockbind.bukkit.BlockBindBukkitPlugin;
 import dev.cerus.blockbind.bukkit.entity.EntityObservers;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
 
@@ -32,8 +35,9 @@ public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
         } else if (packet instanceof EntityRotPacket rotPacket) {
             this.handleRot(rotPacket);
         } else if (packet instanceof EntityDestroyPacket destroyPacket) {
-            Bukkit.broadcastMessage("received destroy");
             this.handleDestroy(destroyPacket);
+        } else if (packet instanceof EntityMetadataPacket metadataPacket) {
+            this.handleMeta(metadataPacket);
         }
     }
 
@@ -79,6 +83,17 @@ public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
         if (player != null) {
             this.plugin.getAdapter().destroyEntity(destroyPacket.getIds(), List.of(player.getUuid()));
         }
+    }
+
+    private void handleMeta(final EntityMetadataPacket metadataPacket) {
+        final List<UUID> list = new ArrayList<>();
+        for (final Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (EntityObservers.isObserving(onlinePlayer.getUniqueId(), metadataPacket.getEntityId())) {
+                list.add(onlinePlayer.getUniqueId());
+            }
+        }
+
+        this.plugin.getAdapter().sendMetadata(metadataPacket.getEntityId(), metadataPacket.getMetadata(), list);
     }
 
     private Set<UUID> getObserving(final int eid) {

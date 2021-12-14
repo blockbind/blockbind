@@ -1,5 +1,6 @@
 package dev.cerus.blockbind.bukkit.tick;
 
+import dev.cerus.blockbind.api.packet.entity.EntityMetadataPacket;
 import dev.cerus.blockbind.api.player.PlayerWrapper;
 import dev.cerus.blockbind.api.redis.PacketRedisCommunicator;
 import dev.cerus.blockbind.api.redis.RedisValueCommunicator;
@@ -15,7 +16,24 @@ public class PlayerUpdateTicker implements Ticker {
         if (this.ticks++ % 5 == 0) {
             Bukkit.getOnlinePlayers().forEach(player -> {
                 if (plugin.getUuidPlayerMap().containsKey(player.getUniqueId()) && player.isOnline()) {
-                    valueCommunicator.updatePlayer(plugin.getUuidPlayerMap().get(player.getUniqueId()));
+                    final PlayerWrapper wrapper = plugin.getUuidPlayerMap().get(player.getUniqueId());
+                    valueCommunicator.updatePlayer(wrapper);
+
+                    final byte skinParts = plugin.getAdapter().getSkinParts(player.getUniqueId());
+                    if (skinParts != wrapper.getSkinMask()) {
+                        wrapper.setSkinMask(skinParts);
+                    }
+                    if (player.getPose().ordinal() != wrapper.getPose()) {
+                        wrapper.setPose((byte) player.getPose().ordinal());
+                    }
+
+                    if (wrapper.getMetadata().isDirty()) {
+                        packetCommunicator.send(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityMetadataPacket(
+                                wrapper.getEntityId(),
+                                wrapper.getMetadata()
+                        ));
+                        wrapper.getMetadata().clean();
+                    }
                 }
             });
         }

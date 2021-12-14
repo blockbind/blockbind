@@ -1,5 +1,6 @@
 package dev.cerus.blockbind.api.platform;
 
+import dev.cerus.blockbind.api.entity.Metadata;
 import dev.cerus.blockbind.api.packet.entity.EntityMovePacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMoveRotPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityRotPacket;
@@ -16,6 +17,8 @@ public interface PlatformAdapter {
 
     Map<String, String> getPlayerPropertySignatures(UUID uuid);
 
+    byte getSkinParts(UUID uuid);
+
     void sendPlayerInfo(PlayerInfoPacket packet, PlayerWrapper player);
 
     void spawnPlayer(SpawnPlayerPacket packet, Collection<UUID> receiver);
@@ -29,5 +32,7 @@ public interface PlatformAdapter {
     void sendHeadRot(PlayerWrapper player, Collection<UUID> receiver);
 
     void destroyEntity(int[] ids, Collection<UUID> receiver);
+
+    void sendMetadata(int eid, Metadata metadata, Collection<UUID> receiver);
 
 }

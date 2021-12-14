@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class BlockBindTickTask {
 
@@ -32,7 +33,11 @@ public class BlockBindTickTask {
     public void start(final long tickDurationMs) {
         this.executorService.scheduleAtFixedRate(() -> {
             for (final Ticker ticker : this.tickers) {
-                ticker.tick(this.plugin, this.packetCommunicator, this.valueCommunicator);
+                try {
+                    ticker.tick(this.plugin, this.packetCommunicator, this.valueCommunicator);
+                } catch (final Exception e) {
+                    this.plugin.getLogger().log(Level.SEVERE, "Error during tick (" + ticker.getClass().getSimpleName() + ")", e);
+                }
             }
         }, 0, tickDurationMs, TimeUnit.MILLISECONDS);
     }
