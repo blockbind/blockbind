@@ -18,6 +18,7 @@ public class BlockBindTickTask {
     private final PacketRedisCommunicator packetCommunicator;
     private final RedisValueCommunicator valueCommunicator;
 
+    // List of tickers
     private final List<Ticker> tickers = Arrays.asList(
             new PlayerUpdateTicker(),
             new EntityObservationTicker()
@@ -31,6 +32,11 @@ public class BlockBindTickTask {
         this.valueCommunicator = valueCommunicator;
     }
 
+    /**
+     * Start the ticking
+     *
+     * @param tickDurationMs The duration between each tick
+     */
     public void start(final long tickDurationMs) {
         this.executorService.scheduleAtFixedRate(() -> {
             // Don't tick if we're not available
@@ -48,6 +54,9 @@ public class BlockBindTickTask {
         }, 0, tickDurationMs, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Stop the ticking
+     */
     public void stop() {
         this.executorService.shutdown();
     }

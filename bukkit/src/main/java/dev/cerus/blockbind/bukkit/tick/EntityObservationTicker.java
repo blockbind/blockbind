@@ -11,13 +11,22 @@ import java.util.List;
 import java.util.Set;
 import org.bukkit.Bukkit;
 
+/**
+ * Controls entity observations
+ * TODO: Also track other entities besides players
+ */
 public class EntityObservationTicker implements Ticker {
 
-    public static final int PLAYER_RANGE = 10;
+    /**
+     * Tracking range for players
+     */
+    public static final int PLAYER_RANGE = 40;
+
     private int ticks;
 
     @Override
     public void tick(final BlockBindBukkitPlugin plugin, final PacketRedisCommunicator packetCommunicator, final RedisValueCommunicator valueCommunicator) {
+        // Only tick every 10 ticks
         if (this.ticks++ < 10) {
             return;
         }
@@ -25,32 +34,26 @@ public class EntityObservationTicker implements Ticker {
 
         final Set<PlayerWrapper> players = new HashSet<>(plugin.getUuidPlayerMap().values());
         for (final PlayerWrapper player : players) {
+            // Check if synced player originates from this server
             if (Bukkit.getPlayer(player.getUuid()) == null) {
                 continue;
             }
 
             for (final PlayerWrapper otherPlayer : players) {
+                // Check if these are the same players
                 if (player == otherPlayer) {
                     continue;
                 }
 
+                // Calculate distance
                 final double dist = this.square(player.getX() - otherPlayer.getX())
                         + this.square(player.getY() - otherPlayer.getY())
                         + this.square(player.getZ() - otherPlayer.getZ());
                 final boolean inRange = dist <= this.square(PLAYER_RANGE);
 
                 if (inRange && !EntityObservers.isObserving(player.getUuid(), otherPlayer.getEntityId())) {
+                    // Other player is in range; observe
                     EntityObservers.getObservedEntities(player.getUuid()).add(otherPlayer.getEntityId());
-                    /*packetCommunicator.send(PacketRedisCommunicator.CHANNEL_PLAYER, new SpawnPlayerPacket(
-                            player.getEntityId(),
-                            otherPlayer.getEntityId(),
-                            otherPlayer.getUuid(),
-                            otherPlayer.getX(),
-                            otherPlayer.getY(),
-                            otherPlayer.getZ(),
-                            otherPlayer.getYaw(),
-                            otherPlayer.getPitch()
-                    ));*/
                     plugin.getAdapter().spawnPlayer(new SpawnPlayerPacket(
                             player.getEntityId(),
                             otherPlayer.getEntityId(),
@@ -64,11 +67,8 @@ public class EntityObservationTicker implements Ticker {
                     plugin.getAdapter().sendHeadRot(otherPlayer, List.of(player.getUuid()));
                     plugin.getAdapter().sendMetadata(otherPlayer.getEntityId(), otherPlayer.getMetadata(), List.of(player.getUuid()));
                 } else if (!inRange && EntityObservers.isObserving(player.getUuid(), otherPlayer.getEntityId())) {
+                    // Other player is out of range; don't observe anymore
                     EntityObservers.getObservedEntities(player.getUuid()).remove(otherPlayer.getEntityId());
-                    /*packetCommunicator.send(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityDestroyPacket(
-                            player.getEntityId(),
-                            new int[] {otherPlayer.getEntityId()}
-                    ));*/
                     plugin.getAdapter().destroyEntity(new int[] {otherPlayer.getEntityId()}, List.of(player.getUuid()));
                 }
             }
