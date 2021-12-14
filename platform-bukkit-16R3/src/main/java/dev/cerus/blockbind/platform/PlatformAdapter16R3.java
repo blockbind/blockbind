@@ -38,6 +38,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
+/**
+ * Platform specific methods for Spigot 1.16.5
+ */
 public class PlatformAdapter16R3 implements PlatformAdapter {
 
     private final Map<Metadata.EntryType, DataWatcherSerializer<?>> serializerMap = Map.of(
@@ -154,18 +157,18 @@ public class PlatformAdapter16R3 implements PlatformAdapter {
     }
 
     @Override
-    public void sendRelMove(final EntityMovePacket relMovePacket, final Collection<UUID> receiver) {
-        final double oldX = relMovePacket.getOldX();
-        final double oldY = relMovePacket.getOldY();
-        final double oldZ = relMovePacket.getOldZ();
-        final double currX = relMovePacket.getNewX();
-        final double currY = relMovePacket.getNewY();
-        final double currZ = relMovePacket.getNewZ();
+    public void sendMove(final EntityMovePacket movePacket, final Collection<UUID> receiver) {
+        final double oldX = movePacket.getOldX();
+        final double oldY = movePacket.getOldY();
+        final double oldZ = movePacket.getOldZ();
+        final double currX = movePacket.getNewX();
+        final double currY = movePacket.getNewY();
+        final double currZ = movePacket.getNewZ();
 
         final Object nmsPacket = new ObjectBuilder(PacketPlayOutEntity.PacketPlayOutRelEntityMove.class)
                 .unsafeInstantiate()
                 .modify()
-                .superField("a", relMovePacket.getEntityId())
+                .superField("a", movePacket.getEntityId())
                 .superField("b", (short) ((currX * 32 - oldX * 32) * 128))
                 .superField("c", (short) ((currY * 32 - oldY * 32) * 128))
                 .superField("d", (short) ((currZ * 32 - oldZ * 32) * 128))
@@ -177,23 +180,23 @@ public class PlatformAdapter16R3 implements PlatformAdapter {
     }
 
     @Override
-    public void sendRelMoveRot(final EntityMoveRotPacket relMoveRotPacket, final Collection<UUID> receiver) {
-        final double oldX = relMoveRotPacket.getOldX();
-        final double oldY = relMoveRotPacket.getOldY();
-        final double oldZ = relMoveRotPacket.getOldZ();
-        final double currX = relMoveRotPacket.getNewX();
-        final double currY = relMoveRotPacket.getNewY();
-        final double currZ = relMoveRotPacket.getNewZ();
+    public void sendMoveRot(final EntityMoveRotPacket moveRotPacket, final Collection<UUID> receiver) {
+        final double oldX = moveRotPacket.getOldX();
+        final double oldY = moveRotPacket.getOldY();
+        final double oldZ = moveRotPacket.getOldZ();
+        final double currX = moveRotPacket.getNewX();
+        final double currY = moveRotPacket.getNewY();
+        final double currZ = moveRotPacket.getNewZ();
 
         final Object nmsPacket = new ObjectBuilder(PacketPlayOutEntity.PacketPlayOutRelEntityMoveLook.class)
                 .unsafeInstantiate()
                 .modify()
-                .superField("a", relMoveRotPacket.getEntityId())
+                .superField("a", moveRotPacket.getEntityId())
                 .superField("b", (short) ((currX * 32 - oldX * 32) * 128))
                 .superField("c", (short) ((currY * 32 - oldY * 32) * 128))
                 .superField("d", (short) ((currZ * 32 - oldZ * 32) * 128))
-                .superField("e", (byte) ((int) (relMoveRotPacket.getYaw() * 256.0F / 360.0F)))
-                .superField("f", (byte) ((int) (relMoveRotPacket.getPitch() * 256.0F / 360.0F)))
+                .superField("e", (byte) ((int) (moveRotPacket.getYaw() * 256.0F / 360.0F)))
+                .superField("f", (byte) ((int) (moveRotPacket.getPitch() * 256.0F / 360.0F)))
                 .superField("g", true)
                 .finish();
         this.broadcastPacket(nmsPacket, receiver.stream()

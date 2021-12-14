@@ -44,7 +44,7 @@ public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
     private void handleRelMove(final EntityMovePacket relMovePacket) {
         final PlayerWrapper player = this.getPlayer(relMovePacket.getEntityId());
         if (player != null) {
-            this.plugin.getAdapter().sendRelMove(relMovePacket, this.getObserving(player.getEntityId()));
+            this.plugin.getAdapter().sendMove(relMovePacket, this.getObserving(player.getEntityId()));
             player.setX(relMovePacket.getNewX());
             player.setY(relMovePacket.getNewY());
             player.setZ(relMovePacket.getNewZ());
@@ -54,7 +54,7 @@ public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
     private void handleRelMoveRot(final EntityMoveRotPacket relMoveRotPacket) {
         final PlayerWrapper player = this.getPlayer(relMoveRotPacket.getEntityId());
         if (player != null) {
-            this.plugin.getAdapter().sendRelMoveRot(relMoveRotPacket, this.getObserving(player.getEntityId()));
+            this.plugin.getAdapter().sendMoveRot(relMoveRotPacket, this.getObserving(player.getEntityId()));
             player.setX(relMoveRotPacket.getNewX());
             player.setY(relMoveRotPacket.getNewY());
             player.setZ(relMoveRotPacket.getNewZ());
