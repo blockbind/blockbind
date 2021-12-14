@@ -1,0 +1,18 @@
+name: Notify test env
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: blockbind/docker-testenv
+          event-type: blockbind
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
