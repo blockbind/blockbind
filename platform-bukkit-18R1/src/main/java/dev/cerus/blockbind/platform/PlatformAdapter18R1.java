@@ -44,6 +44,9 @@ import org.bukkit.entity.Player;
  */
 public class PlatformAdapter18R1 implements PlatformAdapter {
 
+    /**
+     * Block Bind meta types to Mojang meta types mappings
+     */
     private final Map<Metadata.EntryType, DataWatcherSerializer<?>> serializerMap = Map.of(
             Metadata.EntryType.BYTE, DataWatcherRegistry.a,
             Metadata.EntryType.INT, DataWatcherRegistry.b,
@@ -56,6 +59,10 @@ public class PlatformAdapter18R1 implements PlatformAdapter {
             Metadata.EntryType.BOOLEAN, DataWatcherRegistry.i,
             Metadata.EntryType.POSE, DataWatcherRegistry.s
     );
+
+    /**
+     * Block Bind meta indexes to Mojang meta indexes mappings
+     */
     private final Map<Integer, Integer> metaKeyIndexMap = Map.of(
             Entity.META_KEY_MASK, 0,
             Entity.META_KEY_AIR, 1,
