@@ -13,6 +13,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
+/**
+ * Bukkit listener for player movements
+ */
 public class PlayerMoveListener implements Listener {
 
     private final BlockBindBukkitPlugin plugin;
@@ -33,6 +36,11 @@ public class PlayerMoveListener implements Listener {
 
         final Location from = event.getFrom();
         final Location to = event.getTo();
+
+        if (to == null) {
+            // Why can this be null???
+            return;
+        }
 
         if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) {
             // Look

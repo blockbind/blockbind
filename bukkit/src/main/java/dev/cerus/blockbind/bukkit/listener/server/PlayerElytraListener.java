@@ -11,6 +11,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 
+/**
+ * Bukkit listener for player gliding
+ */
 public class PlayerElytraListener implements Listener {
 
     private final BlockBindBukkitPlugin plugin;

@@ -14,6 +14,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+/**
+ * Bukkit listener for player joining
+ */
 public class PlayerJoinListener implements Listener {
 
     private final BlockBindBukkitPlugin plugin;
@@ -36,12 +39,14 @@ public class PlayerJoinListener implements Listener {
             this.plugin.getAdapter().sendPlayerInfo(PlayerInfoPacket.addPlayer(wrapper), wrapper);
         }
 
+        // Get next available entity id
         this.valueCommunicator.getAndIncrementEntityId().whenComplete((eid, throwable) -> {
             if (throwable != null) {
                 this.plugin.getLogger().log(Level.SEVERE, "Failed to fetch entity id", throwable);
                 return;
             }
 
+            // Wrap player
             final PlayerWrapper wrapper = new PlayerWrapper(
                     player.getUniqueId(),
                     player.getName(),
@@ -60,10 +65,17 @@ public class PlayerJoinListener implements Listener {
             wrapper.setSkinMask(this.plugin.getAdapter().getSkinParts(player.getUniqueId()));
             wrapper.setPose((byte) player.getPose().ordinal());
 
+            // Cache and sync wrapper
             this.plugin.getNameUuidMap().put(player.getName(), player.getUniqueId());
             this.plugin.getEntityIdUuidMap().put(eid, player.getUniqueId());
             this.plugin.getUuidPlayerMap().put(player.getUniqueId(), wrapper);
             this.valueCommunicator.addPlayer(wrapper).whenComplete(($, t) -> {
+                if (t != null) {
+                    this.plugin.getLogger().log(Level.SEVERE, "Failed to sync player", t);
+                    return;
+                }
+
+                // Send corresponding packets
                 this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_PLAYER, PlayerInfoPacket.addPlayer(wrapper));
                 this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityMetadataPacket(
                         wrapper.getEntityId(),

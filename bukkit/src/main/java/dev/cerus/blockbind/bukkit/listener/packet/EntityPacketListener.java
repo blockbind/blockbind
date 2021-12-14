@@ -14,10 +14,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+/**
+ * Packet listener for entity packets
+ */
 public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
 
     private final BlockBindBukkitPlugin plugin;
@@ -28,6 +32,10 @@ public class EntityPacketListener implements BiConsumer<Packet, Throwable> {
 
     @Override
     public void accept(final Packet packet, final Throwable throwable) {
+        if (throwable != null) {
+            this.plugin.getLogger().log(Level.SEVERE, "Could not read packet (Entity)", throwable);
+            return;
+        }
         if (packet instanceof EntityMovePacket relMovePacket) {
             this.handleRelMove(relMovePacket);
         } else if (packet instanceof EntityMoveRotPacket relMoveRotPacket) {

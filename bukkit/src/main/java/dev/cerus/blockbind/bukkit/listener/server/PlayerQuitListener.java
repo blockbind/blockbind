@@ -11,6 +11,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Bukkit listener for player leaving
+ */
 public class PlayerQuitListener implements Listener {
 
     private final BlockBindBukkitPlugin plugin;
@@ -29,6 +32,7 @@ public class PlayerQuitListener implements Listener {
     public void onQuit(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
 
+        // Remove player from sync and cache
         final PlayerWrapper wrapper = this.plugin.getUuidPlayerMap().remove(this.plugin.getNameUuidMap().remove(player.getName()));
         this.plugin.getEntityIdUuidMap().remove(wrapper.getEntityId());
         this.valueCommunicator.removePlayer(wrapper);

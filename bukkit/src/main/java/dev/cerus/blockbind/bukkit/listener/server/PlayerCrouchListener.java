@@ -11,6 +11,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
+/**
+ * Bukkit listener for player crouching
+ */
 public class PlayerCrouchListener implements Listener {
 
     private final BlockBindBukkitPlugin plugin;

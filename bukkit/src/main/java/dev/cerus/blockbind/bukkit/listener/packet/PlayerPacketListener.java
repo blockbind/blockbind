@@ -14,6 +14,9 @@ import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+/**
+ * Packet listener for player packets
+ */
 public class PlayerPacketListener implements BiConsumer<Packet, Throwable> {
 
     private final BlockBindBukkitPlugin plugin;
@@ -27,8 +30,7 @@ public class PlayerPacketListener implements BiConsumer<Packet, Throwable> {
     @Override
     public void accept(final Packet packet, final Throwable throwable) {
         if (throwable != null) {
-            throwable.printStackTrace();
-            System.err.println("Could not read packet");
+            this.plugin.getLogger().log(Level.SEVERE, "Could not read packet (Player)", throwable);
             return;
         }
 
