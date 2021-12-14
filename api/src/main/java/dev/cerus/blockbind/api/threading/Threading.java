@@ -29,7 +29,7 @@ public class Threading {
     }
 
     public static <T> CompletableFuture<T> whenComplete(final CompletionStage<T> future) {
-        if (Identity.getIdentity().isServerThread()) {
+        if (Identity.getIdentity().isMainThread()) {
             return whenCompleteSync(future);
         } else {
             return whenCompleteAsync(future);

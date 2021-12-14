@@ -4,6 +4,9 @@ import dev.cerus.blockbind.api.identity.Identity;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 
+/**
+ * Bukkit implementation for the Identity interface
+ */
 public class BukkitIdentity extends Identity {
 
     private final BlockBindBukkitPlugin plugin;
@@ -18,12 +21,7 @@ public class BukkitIdentity extends Identity {
     }
 
     @Override
-    public void runAsync(final Runnable runnable) {
-        this.plugin.getServer().getScheduler().runTaskAsynchronously(this.plugin, runnable);
-    }
-
-    @Override
-    public boolean isServerThread() {
+    public boolean isMainThread() {
         return Bukkit.isPrimaryThread();
     }
 
