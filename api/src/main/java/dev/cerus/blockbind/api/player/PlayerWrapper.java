@@ -15,8 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Represents a connected player
+ */
 public class PlayerWrapper extends LivingEntity {
 
+    /* Metadata indexes */
     public static final int META_KEY_SKIN = 17;
 
     private static final Gson GSON = new GsonBuilder()
@@ -30,7 +34,11 @@ public class PlayerWrapper extends LivingEntity {
     private int ping;
     private String displayName;
 
-    public PlayerWrapper(final UUID uuid, final String name, final int entityId, final Map<String, String> properties, final Map<String, String> propertySignatures) {
+    public PlayerWrapper(final UUID uuid,
+                         final String name,
+                         final int entityId,
+                         final Map<String, String> properties,
+                         final Map<String, String> propertySignatures) {
         super(uuid, entityId);
         this.name = name;
         this.properties = properties;
@@ -64,12 +72,20 @@ public class PlayerWrapper extends LivingEntity {
         this.displayName = displayName;
     }
 
+    /**
+     * Attempts to parse a player wrapper from the provided json structure
+     *
+     * @param playerObj The json structure to parse from
+     *
+     * @return The parsed player
+     */
     public static PlayerWrapper parse(final JsonObject playerObj) {
         final JsonObject uuidObj = playerObj.get("uuid").getAsJsonObject();
         final JsonObject propertiesObj = playerObj.get("properties").getAsJsonObject();
         final JsonObject sigsObj = playerObj.get("signatures").getAsJsonObject();
         final JsonObject posObj = playerObj.get("pos").getAsJsonObject();
 
+        // Property stuff
         final Map<String, String> properties = new HashMap<>();
         final Map<String, String> signatures = new HashMap<>();
         for (final String key : propertiesObj.keySet()) {
@@ -79,6 +95,7 @@ public class PlayerWrapper extends LivingEntity {
             signatures.put(key, sigsObj.get(key).getAsString());
         }
 
+        // Create instance
         final PlayerWrapper player = new PlayerWrapper(
                 new UUID(
                         uuidObj.get("msb").getAsLong(),
@@ -98,6 +115,7 @@ public class PlayerWrapper extends LivingEntity {
                 playerObj.has("display_name") ? playerObj.get("display_name").getAsString() : null
         );
 
+        // Check for metadata; read if present
         if (playerObj.has("meta")) {
             final String metaStr = playerObj.get("meta").getAsString();
             final byte[] metaBytes = Base64.getDecoder().decode(metaStr.getBytes(StandardCharsets.UTF_8));
@@ -109,6 +127,11 @@ public class PlayerWrapper extends LivingEntity {
         return player;
     }
 
+    /**
+     * Attempts to encode this player wrapper into a json structure
+     *
+     * @return A json string
+     */
     public String encode() {
         final JsonObject object = new JsonObject();
         final JsonObject uuidObj = new JsonObject();
@@ -122,11 +145,13 @@ public class PlayerWrapper extends LivingEntity {
         object.addProperty("name", this.name);
         object.addProperty("entity_id", this.entityId);
 
+        // Property stuff
         this.properties.forEach(propertiesObj::addProperty);
         this.propertySignatures.forEach(sigsObj::addProperty);
         object.add("properties", propertiesObj);
         object.add("signatures", sigsObj);
 
+        // Position stuff
         posObj.addProperty("x", this.x);
         posObj.addProperty("y", this.y);
         posObj.addProperty("z", this.z);
@@ -140,6 +165,7 @@ public class PlayerWrapper extends LivingEntity {
             object.addProperty("display_name", this.displayName);
         }
 
+        // Metadata stuff
         final ByteBuf buffer = Unpooled.buffer();
         this.metadata.write(buffer);
         final byte[] metaBytes = Arrays.copyOf(buffer.array(), buffer.writerIndex());
@@ -150,23 +176,28 @@ public class PlayerWrapper extends LivingEntity {
         return GSON.toJson(object);
     }
 
-    public void overwrite(final PlayerWrapper player) {
+    /**
+     * Overwrite the data of this player wrapper with the data of the provided player wrapper
+     *
+     * @param other The other player wrapper
+     */
+    public void overwrite(final PlayerWrapper other) {
         this.properties.clear();
-        this.properties.putAll(player.properties);
+        this.properties.putAll(other.properties);
 
         this.propertySignatures.clear();
-        this.propertySignatures.putAll(player.propertySignatures);
+        this.propertySignatures.putAll(other.propertySignatures);
 
-        this.x = player.x;
-        this.y = player.y;
-        this.z = player.z;
-        this.yaw = player.yaw;
-        this.pitch = player.pitch;
-        this.ping = player.ping;
-        this.gamemode = player.gamemode;
-        this.displayName = player.displayName;
+        this.x = other.x;
+        this.y = other.y;
+        this.z = other.z;
+        this.yaw = other.yaw;
+        this.pitch = other.pitch;
+        this.ping = other.ping;
+        this.gamemode = other.gamemode;
+        this.displayName = other.displayName;
 
-        this.metadata.overwrite(player.metadata);
+        this.metadata.overwrite(other.metadata);
     }
 
     public byte getSkinMask() {
