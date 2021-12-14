@@ -5,11 +5,19 @@ import dev.cerus.blockbind.platform.PlatformAdapter16R3;
 import dev.cerus.blockbind.platform.PlatformAdapter18R1;
 import org.bukkit.Bukkit;
 
+/**
+ * Simple utility for choosing the right adapter
+ */
 public class PlatformChooser {
 
     private PlatformChooser() {
     }
 
+    /**
+     * Attempts to find a matching platform adapter
+     *
+     * @return A matching adapter or null
+     */
     public static PlatformAdapter choose() {
         String version = Bukkit.getVersion();
         version = version.substring(version.indexOf("MC: ") + 4, version.lastIndexOf(')'));
