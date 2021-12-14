@@ -26,6 +26,11 @@ public class BukkitIdentity extends Identity {
     }
 
     @Override
+    public boolean isAvailable() {
+        return !this.plugin.isShuttingDown();
+    }
+
+    @Override
     public String getName() {
         return this.plugin.getServerName();
     }

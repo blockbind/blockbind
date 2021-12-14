@@ -1,5 +1,6 @@
 package dev.cerus.blockbind.bukkit.tick;
 
+import dev.cerus.blockbind.api.identity.Identity;
 import dev.cerus.blockbind.api.redis.PacketRedisCommunicator;
 import dev.cerus.blockbind.api.redis.RedisValueCommunicator;
 import dev.cerus.blockbind.bukkit.BlockBindBukkitPlugin;
@@ -32,11 +33,16 @@ public class BlockBindTickTask {
 
     public void start(final long tickDurationMs) {
         this.executorService.scheduleAtFixedRate(() -> {
+            // Don't tick if we're not available
+            if (!Identity.getIdentity().isAvailable()) {
+                return;
+            }
+
             for (final Ticker ticker : this.tickers) {
                 try {
                     ticker.tick(this.plugin, this.packetCommunicator, this.valueCommunicator);
                 } catch (final Exception e) {
-                    this.plugin.getLogger().log(Level.SEVERE, "Error during tick (" + ticker.getClass().getSimpleName() + ")", e);
+                    this.plugin.getLogger().log(Level.SEVERE, "Failed to tick " + ticker.getClass().getSimpleName(), e);
                 }
             }
         }, 0, tickDurationMs, TimeUnit.MILLISECONDS);

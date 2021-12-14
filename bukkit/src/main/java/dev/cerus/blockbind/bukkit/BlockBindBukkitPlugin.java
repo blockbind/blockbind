@@ -56,6 +56,12 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
     private RedisClient redisClient;
     private String serverName;
     private PlatformAdapter adapter;
+    private boolean shuttingDown;
+
+    @Override
+    public void onLoad() {
+        this.shuttingDown = false;
+    }
 
     @Override
     public void onEnable() {
@@ -69,6 +75,7 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
             this.getLogger().info("Looks like this is the first server start with Block Bind installed!");
             this.getLogger().info("Please edit the Block Bind config and restart your server.");
             this.getPluginLoader().disablePlugin(this);
+            this.shuttingDown = true;
             return;
         }
 
@@ -77,6 +84,7 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
         if (this.adapter == null) {
             this.getLogger().severe("Unsupported server version");
             this.getPluginLoader().disablePlugin(this);
+            this.shuttingDown = true;
             return;
         }
 
@@ -140,6 +148,8 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        this.shuttingDown = true;
+
         // Perform redis cleanup
         if (this.redisClient != null) {
             this.getLogger().info("Cleaning up...");
@@ -194,6 +204,10 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
 
     public PlatformAdapter getAdapter() {
         return this.adapter;
+    }
+
+    boolean isShuttingDown() {
+        return this.shuttingDown;
     }
 
 }

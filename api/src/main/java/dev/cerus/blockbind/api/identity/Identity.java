@@ -43,6 +43,14 @@ public abstract class Identity {
     public abstract boolean isMainThread();
 
     /**
+     * Is this Block Bind instance available?
+     * Should return false if it is currently shutting down
+     *
+     * @return Whether we are available or not
+     */
+    public abstract boolean isAvailable();
+
+    /**
      * Gets the name of this identity
      *
      * @return The name
