@@ -21,8 +21,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
+/**
+ * Redis communicator for Block Bind packets
+ */
 public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> implements RedisCommunicator<Packet> {
 
+    /* Available channels */
     public static final String CHANNEL_PLAYER = "blockbind:player";
     public static final String CHANNEL_ENTITY = "blockbind:entity";
 
@@ -47,6 +51,7 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
         final CompletableFuture<Void> future = new CompletableFuture<>();
 
         try {
+            // Get a buffer and write & compress the packet
             final ByteBuf buf = Unpooled.buffer();
             buf.writeInt(PacketRegistry.getPacketId(packet.getClass()));
             packet.write(buf);
@@ -54,8 +59,10 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
             final byte[] compressed = CompressionUtil.compress(array);
             final String b64Encode = Base64.getEncoder().encodeToString(compressed);
             final String str = Identity.getIdentity().getName() + ":" + array.length + ":" + b64Encode;
+            // Don't forget to release
             buf.release();
 
+            // Publish binary packet
             this.pubCmd.publish(channel, str).whenComplete((aLong, throwable) -> {
                 if (throwable != null) {
                     future.completeExceptionally(throwable);
@@ -72,6 +79,7 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
 
     @Override
     public void listen(final String channel, final BiConsumer<Packet, Throwable> callback) {
+        // Subscribe to the channel
         this.subCmd.subscribe(channel);
         final Set<BiConsumer<Packet, Throwable>> subs = this.channelSubscribers
                 .computeIfAbsent(channel, $ -> new HashSet<>());
@@ -82,13 +90,17 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
     public void message(final String channel, final String message) {
         final Set<BiConsumer<Packet, Throwable>> subs = this.channelSubscribers.get(channel);
         if (subs != null && !subs.isEmpty()) {
+            // Decode the encoded packet
             final String[] split = message.split(":", 3);
             final String srv = split[0];
+            // Skip if we sent the packet
             if (srv.equals(Identity.getIdentity().getName())) {
                 return;
             }
 
+            // Offload the heavy lifting
             Threading.runAsync(() -> {
+                // Decompress
                 final int len = Integer.parseInt(split[1]);
                 final byte[] b64Decode = Base64.getDecoder().decode(split[2].getBytes(StandardCharsets.UTF_8));
                 final byte[] decompressed;
@@ -99,12 +111,13 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
                     return;
                 }
 
+                // Wrap a buffer around the decompressed data and read the packet
                 try {
                     final ByteBuf buf = Unpooled.wrappedBuffer(decompressed);
                     final int id = buf.readInt();
                     final Packet packet = PacketRegistry.getPacketById(id);
                     packet.read(buf);
-                    buf.release();
+                    buf.release(); // Very important to release data
                     subs.forEach(listener -> listener.accept(packet, null));
                 } catch (final NullPointerException | IndexOutOfBoundsException e) {
                     subs.forEach(listener -> listener.accept(null, e));

@@ -13,8 +13,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+/**
+ * Handles storage and retrieval of common synced values, such as player data
+ * Not a "real" Redis communicator per se
+ */
 public class RedisValueCommunicator {
 
+    /* Available keys */
     private static final String KEY_BASE = "blockbind:";
     public static final String KEY_ENTITY_ID = KEY_BASE + "entity_id";
     public static final String KEY_SERVERS = KEY_BASE + "servers";
@@ -32,6 +37,13 @@ public class RedisValueCommunicator {
         this.commands.setnx(KEY_SERVERS, "0").whenComplete(($, t) -> this.commands.incr(KEY_SERVERS));
     }
 
+    /**
+     * Add a player
+     *
+     * @param player The player to add
+     *
+     * @return A future
+     */
     public CompletableFuture<Void> addPlayer(final PlayerWrapper player) {
         this.commands.multi();
         this.commands.set(KEY_PLAYER_BASE + player.getUuid().toString(), player.encode());
@@ -40,6 +52,13 @@ public class RedisValueCommunicator {
         return Threading.whenComplete(future).thenApply($ -> null);
     }
 
+    /**
+     * Remove a player
+     *
+     * @param player The player to remove
+     *
+     * @return A future
+     */
     public CompletableFuture<Void> removePlayer(final PlayerWrapper player) {
         this.commands.multi();
         this.commands.del(KEY_PLAYER_BASE + player.getUuid().toString());
@@ -48,16 +67,35 @@ public class RedisValueCommunicator {
         return Threading.whenComplete(future).thenApply($ -> null);
     }
 
+    /**
+     * Update player data
+     *
+     * @param player The player to update
+     *
+     * @return A future
+     */
     public CompletableFuture<Void> updatePlayer(final PlayerWrapper player) {
         final RedisFuture<String> future = this.commands.set(KEY_PLAYER_BASE + player.getUuid().toString(), player.encode());
         return Threading.whenComplete(future).thenApply($ -> null);
     }
 
+    /**
+     * Get player data
+     *
+     * @param uuid The uuid of the player
+     *
+     * @return The player
+     */
     public CompletableFuture<PlayerWrapper> getPlayer(final UUID uuid) {
         final RedisFuture<String> future = this.commands.get(KEY_PLAYER_BASE + uuid.toString());
         return Threading.whenComplete(future).thenApply(str -> PlayerWrapper.parse(JsonParser.parseString(str).getAsJsonObject()));
     }
 
+    /**
+     * Get all players
+     *
+     * @return All synced players
+     */
     public CompletableFuture<Set<PlayerWrapper>> getPlayers() {
         final Set<PlayerWrapper> players = new HashSet<>();
         final CompletionStage<Set<PlayerWrapper>> future = this.commands.smembers(KEY_PLAYER_LIST)
@@ -83,6 +121,11 @@ public class RedisValueCommunicator {
         return Threading.whenComplete(future);
     }
 
+    /**
+     * Get a free entity id
+     *
+     * @return The next free entity id
+     */
     public CompletableFuture<Integer> getAndIncrementEntityId() {
         this.commands.multi();
         this.commands.get(KEY_ENTITY_ID);
