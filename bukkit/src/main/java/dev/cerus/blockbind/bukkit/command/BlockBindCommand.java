@@ -20,12 +20,6 @@ public class BlockBindCommand extends BaseCommand {
     @Dependency
     private RedisValueCommunicator valueCommunicator;
 
-    @Subcommand("testpacket")
-    public void handleTestPacket(final CommandSender sender) {
-        //this.packetCommunicator.send(PacketRedisCommunicator.CHANNEL_PLAYER, new PlayerInfoPacket(UUID.randomUUID(), "Player", Map.of()));
-        sender.sendMessage("PlayerInfoPacket sent");
-    }
-
     @Subcommand("testid")
     public void handleTestId(final CommandSender sender, final boolean async) {
         final Runnable run = () -> {
