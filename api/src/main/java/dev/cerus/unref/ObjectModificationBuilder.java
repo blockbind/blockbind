@@ -5,6 +5,9 @@ import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 import sun.misc.Unsafe;
 
+/**
+ * Object modification builder using reflection
+ */
 public class ObjectModificationBuilder {
 
     private final Object obj;
@@ -21,11 +24,26 @@ public class ObjectModificationBuilder {
         this.clazz = clazz;
     }
 
+    /**
+     * Delegate all throwables to the provided callback
+     *
+     * @param delegate The callback
+     *
+     * @return The builder
+     */
     public ObjectModificationBuilder delegateThrowables(final Consumer<Throwable> delegate) {
         this.throwableDelegate = delegate;
         return this;
     }
 
+    /**
+     * Set a value to a field
+     *
+     * @param name The name of the field
+     * @param val  The new value
+     *
+     * @return The builder
+     */
     public ObjectModificationBuilder field(final String name, final Object val) {
         try {
             final Field field = this.clazz.getDeclaredField(name);
@@ -41,6 +59,14 @@ public class ObjectModificationBuilder {
         return this;
     }
 
+    /**
+     * Set a value to a field that's part of the object's superclass
+     *
+     * @param name The name of the field
+     * @param val  The new value
+     *
+     * @return The builder
+     */
     public ObjectModificationBuilder superField(final String name, final Object val) {
         try {
             final Field field = this.clazz.getSuperclass().getDeclaredField(name);
@@ -56,6 +82,13 @@ public class ObjectModificationBuilder {
         return this;
     }
 
+    /**
+     * Set a final field using 'Unsafe'
+     * This is a mess, I don't really like this solution
+     *
+     * @param field The field to overwrite
+     * @param val   The value to set
+     */
     private void setFinal(final Field field, final Object val) {
         final boolean isStatic = this.obj == null;
         final Unsafe unsafe = UnsafeLocator.locateUnsafe();
@@ -117,6 +150,11 @@ public class ObjectModificationBuilder {
         }
     }
 
+    /**
+     * Return the modified object
+     *
+     * @return The modified object
+     */
     public Object finish() {
         return this.obj;
     }

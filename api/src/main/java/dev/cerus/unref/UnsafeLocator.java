@@ -3,6 +3,9 @@ package dev.cerus.unref;
 import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
+/**
+ * Retrieves the 'Unsafe' instance
+ */
 public class UnsafeLocator {
 
     private static Unsafe unsafe;
@@ -17,6 +20,11 @@ public class UnsafeLocator {
         }
     }
 
+    /**
+     * Locate the 'Unsafe' instance
+     *
+     * @return The 'Unsafe' instance
+     */
     public static Unsafe locateUnsafe() {
         return unsafe;
     }
