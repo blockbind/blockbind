@@ -6,6 +6,9 @@ import dev.cerus.blockbind.api.util.BufferUtil;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 
+/**
+ * Player info packet
+ */
 public class PlayerInfoPacket extends Packet {
 
     private Type type;

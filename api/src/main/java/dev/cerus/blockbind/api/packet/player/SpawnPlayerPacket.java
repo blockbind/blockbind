@@ -5,6 +5,9 @@ import dev.cerus.blockbind.api.util.BufferUtil;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 
+/**
+ * Spawn player packet
+ */
 public class SpawnPlayerPacket extends Packet {
 
     private int receiver;

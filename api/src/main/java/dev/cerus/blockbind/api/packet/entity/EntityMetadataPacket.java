@@ -4,6 +4,9 @@ import dev.cerus.blockbind.api.entity.Metadata;
 import dev.cerus.blockbind.api.packet.Packet;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Entity metadata packet
+ */
 public class EntityMetadataPacket extends Packet {
 
     private int entityId;

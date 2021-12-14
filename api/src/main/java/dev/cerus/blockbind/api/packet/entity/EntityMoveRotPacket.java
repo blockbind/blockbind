@@ -3,6 +3,9 @@ package dev.cerus.blockbind.api.packet.entity;
 import dev.cerus.blockbind.api.packet.Packet;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Entity move and rotation packet
+ */
 public class EntityMoveRotPacket extends Packet {
 
     private int entityId;
