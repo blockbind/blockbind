@@ -46,3 +46,7 @@ synchronized data.
 2. Restart the servers
 3. Edit the configs of the Block Bind implementation
 4. Restart your servers again
+
+## Media
+
+[Minecraft Cross Server Synchronization - "Dev log" #1](https://www.youtube.com/watch?v=dyTJMn6mU80)
