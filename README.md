@@ -2,8 +2,9 @@
 
 <h1 align="center">Block Bind</h1>
 <p align="center">Synchronizing distributed Minecraft servers</p>
+<p align="center"><sub><sup>Made with ♥ by <a href="https://github.com/cerus">Cerus</a> and the Block Bind contributors</sup></sub></p>
 
-<hr>
+<br>
 <br>
 
 - [What is Block Bind](#What-is-Block-Bind)
