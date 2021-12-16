@@ -60,4 +60,4 @@ jobs:
           prerelease: false
           title: "Block Bind v${{ steps.project.outputs.version }}"
           files: |
-            blockbind/bukkit/target/blockbind-bukkit.jar
+            bukkit/target/blockbind-bukkit.jar
