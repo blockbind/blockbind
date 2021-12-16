@@ -1,6 +1,17 @@
-# Block Bind
+<img width="140px" height="140px" src="https://avatars.githubusercontent.com/u/95259820?s=200&v=4" align="right">
 
-Synchronizing distributed Minecraft servers
+<h1 align="center">Block Bind</h1>
+<p align="center">Synchronizing distributed Minecraft servers</p>
+
+<hr>
+<br>
+
+- [What is Block Bind](#What-is-Block-Bind)
+- [How Block Bind works](#How-Block-Bind-works)
+- [Try Block Bind out](#Try-Block-Bind-out)
+- [Roadmap](#Roadmap)
+- [Installation](#Installation)
+- [Media](#Media)
 
 ## What is Block Bind
 
@@ -18,6 +29,11 @@ We currently support Spigot 1.16.5 and Spigot 1.18.
 
 Block Bind utilizes the Pub/Sub functionality of Redis to communicate with other servers. Block Bind also uses the key value storage for temporary
 synchronized data.
+
+## Try Block Bind out
+
+We provide a Docker test environment that contains all dependencies and two 1.16.5 Spigot servers. Please take a look
+at [blockbind/docker-testenv](https://github.com/blockbind/docker-testenv) if you would like to check it out.
 
 ## Roadmap
 
