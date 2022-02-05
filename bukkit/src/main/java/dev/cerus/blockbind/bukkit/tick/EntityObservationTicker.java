@@ -20,7 +20,7 @@ public class EntityObservationTicker implements Ticker {
     /**
      * Tracking range for players
      */
-    public static final int PLAYER_RANGE = 40;
+    public static final int PLAYER_RANGE = Bukkit.getServer().getViewDistance() * 16;
 
     private int ticks;
 
@@ -46,9 +46,9 @@ public class EntityObservationTicker implements Ticker {
                 }
 
                 // Calculate distance
-                final double dist = this.square(player.getX() - otherPlayer.getX())
-                        + this.square(player.getY() - otherPlayer.getY())
-                        + this.square(player.getZ() - otherPlayer.getZ());
+                final double dist = this.square((int) player.getX() - (int) otherPlayer.getX())
+                        + this.square((int) player.getY() - (int) otherPlayer.getY())
+                        + this.square((int) player.getZ() - (int) otherPlayer.getZ());
                 final boolean inRange = dist <= this.square(PLAYER_RANGE);
 
                 if (inRange && !EntityObservers.isObserving(player.getUuid(), otherPlayer.getEntityId())) {
@@ -75,7 +75,7 @@ public class EntityObservationTicker implements Ticker {
         }
     }
 
-    private double square(final double n) {
+    private int square(final int n) {
         return n * n;
     }
 
