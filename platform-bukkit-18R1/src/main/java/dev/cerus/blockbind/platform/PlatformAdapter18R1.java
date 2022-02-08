@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.minecraft.core.BlockPosition;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntity;
@@ -35,7 +36,10 @@ import net.minecraft.network.syncher.DataWatcherRegistry;
 import net.minecraft.network.syncher.DataWatcherSerializer;
 import net.minecraft.world.entity.EntityPose;
 import net.minecraft.world.level.EnumGamemode;
+import net.minecraft.world.level.block.state.IBlockData;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_18_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -110,6 +114,26 @@ public class PlatformAdapter18R1 implements PlatformAdapter {
                 .filter(e -> e.getValue().hasSignature())
                 .map(e -> Map.entry(e.getKey(), e.getValue().getSignature()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public int getProtocolId(final UUID worldId, final int x, final int y, final int z) {
+        final Block block = Bukkit.getWorld(worldId).getBlockAt(x, y, z);
+        final IBlockData nmsBlockData = ((CraftChunk) block.getChunk()).getHandle().a_(new BlockPosition(x, y, z));
+        return net.minecraft.world.level.block.Block.i(nmsBlockData);
+    }
+
+    @Override
+    public void setBlockAt(final UUID worldId, final int x, final int y, final int z, final int blockId) {
+        final Block block = Bukkit.getWorld(worldId).getBlockAt(x, y, z);
+        ((CraftChunk) block.getChunk()).getHandle().a(
+                new BlockPosition(x, y, z),
+                net.minecraft.world.level.block.Block.a(blockId),
+                false
+        );
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            player.sendBlockChange(block.getLocation(), block.getBlockData());
+        }
     }
 
     @Override

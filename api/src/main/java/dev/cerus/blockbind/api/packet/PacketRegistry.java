@@ -1,5 +1,6 @@
 package dev.cerus.blockbind.api.packet;
 
+import dev.cerus.blockbind.api.packet.block.BlockChangePacket;
 import dev.cerus.blockbind.api.packet.entity.EntityDestroyPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMetadataPacket;
 import dev.cerus.blockbind.api.packet.entity.EntityMovePacket;
@@ -28,6 +29,7 @@ public class PacketRegistry {
         register(0x04, EntityRotPacket.class, EntityRotPacket::new);
         register(0x05, EntityDestroyPacket.class, EntityDestroyPacket::new);
         register(0x06, EntityMetadataPacket.class, EntityMetadataPacket::new);
+        register(0x07, BlockChangePacket.class, BlockChangePacket::new);
     }
 
     private PacketRegistry() {

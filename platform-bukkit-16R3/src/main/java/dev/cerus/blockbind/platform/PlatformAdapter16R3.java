@@ -20,21 +20,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import net.minecraft.server.v1_16_R3.DataWatcher;
-import net.minecraft.server.v1_16_R3.DataWatcherObject;
-import net.minecraft.server.v1_16_R3.DataWatcherRegistry;
-import net.minecraft.server.v1_16_R3.DataWatcherSerializer;
-import net.minecraft.server.v1_16_R3.EntityPose;
-import net.minecraft.server.v1_16_R3.EnumGamemode;
-import net.minecraft.server.v1_16_R3.IChatBaseComponent;
-import net.minecraft.server.v1_16_R3.Packet;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntity;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityHeadRotation;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata;
-import net.minecraft.server.v1_16_R3.PacketPlayOutNamedEntitySpawn;
-import net.minecraft.server.v1_16_R3.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_16_R3.CraftChunk;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -101,6 +90,26 @@ public class PlatformAdapter16R3 implements PlatformAdapter {
                 .filter(e -> e.getValue().hasSignature())
                 .map(e -> Map.entry(e.getKey(), e.getValue().getSignature()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public int getProtocolId(final UUID worldId, final int x, final int y, final int z) {
+        final Block block = Bukkit.getWorld(worldId).getBlockAt(x, y, z);
+        final IBlockData nmsBlockData = ((CraftChunk) block.getChunk()).getHandle().getType(new BlockPosition(x, y, z));
+        return net.minecraft.server.v1_16_R3.Block.getCombinedId(nmsBlockData);
+    }
+
+    @Override
+    public void setBlockAt(final UUID worldId, final int x, final int y, final int z, final int blockId) {
+        final Block block = Bukkit.getWorld(worldId).getBlockAt(x, y, z);
+        ((CraftChunk) block.getChunk()).getHandle().setType(
+                new BlockPosition(x, y, z),
+                net.minecraft.server.v1_16_R3.Block.getByCombinedId(blockId),
+                false
+        );
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            player.sendBlockChange(block.getLocation(), block.getBlockData());
+        }
     }
 
     @Override

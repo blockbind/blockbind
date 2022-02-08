@@ -44,6 +44,29 @@ public interface PlatformAdapter {
     byte getSkinParts(UUID uuid);
 
     /**
+     * Gets the protocol id of a block
+     *
+     * @param worldId World ID
+     * @param x       X pos
+     * @param y       Y pos
+     * @param z       Z pos
+     *
+     * @return Block id
+     */
+    int getProtocolId(UUID worldId, int x, int y, int z);
+
+    /**
+     * Sets a block at specified coords
+     *
+     * @param worldId World ID
+     * @param x       X pos
+     * @param y       Y pos
+     * @param z       Z pos
+     * @param blockId ID of block
+     */
+    void setBlockAt(UUID worldId, int x, int y, int z, int blockId);
+
+    /**
      * Translates a Block Bind player info packet into the platform equivalent and sends it to chosen receivers
      *
      * @param packet The packet to translate

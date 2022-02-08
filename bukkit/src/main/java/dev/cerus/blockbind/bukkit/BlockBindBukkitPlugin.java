@@ -9,8 +9,10 @@ import dev.cerus.blockbind.api.redis.PacketRedisCommunicator;
 import dev.cerus.blockbind.api.redis.RedisValueCommunicator;
 import dev.cerus.blockbind.api.threading.Threading;
 import dev.cerus.blockbind.bukkit.command.BlockBindCommand;
+import dev.cerus.blockbind.bukkit.listener.packet.BlockPacketListener;
 import dev.cerus.blockbind.bukkit.listener.packet.EntityPacketListener;
 import dev.cerus.blockbind.bukkit.listener.packet.PlayerPacketListener;
+import dev.cerus.blockbind.bukkit.listener.server.PlayerChangeBlockListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerCrouchListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerElytraListener;
 import dev.cerus.blockbind.bukkit.listener.server.PlayerJoinListener;
@@ -108,6 +110,7 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
         final PacketRedisCommunicator packetCommunicator = new PacketRedisCommunicator(packetPubCon, packetSubCon);
         packetCommunicator.listen(PacketRedisCommunicator.CHANNEL_PLAYER, new PlayerPacketListener(this, valueCommunicator));
         packetCommunicator.listen(PacketRedisCommunicator.CHANNEL_ENTITY, new EntityPacketListener(this));
+        packetCommunicator.listen(PacketRedisCommunicator.CHANNEL_BLOCK, new BlockPacketListener(this));
 
         // Register commands
         final BukkitCommandManager commandManager = new BukkitCommandManager(this);
@@ -122,6 +125,7 @@ public class BlockBindBukkitPlugin extends JavaPlugin {
         pluginManager.registerEvents(new PlayerMoveListener(this, packetCommunicator), this);
         pluginManager.registerEvents(new PlayerCrouchListener(this, packetCommunicator), this);
         pluginManager.registerEvents(new PlayerElytraListener(this, packetCommunicator), this);
+        pluginManager.registerEvents(new PlayerChangeBlockListener(this, packetCommunicator), this);
 
         // Start ticking
         final BlockBindTickTask tickTask = new BlockBindTickTask(this, packetCommunicator, valueCommunicator);

@@ -29,6 +29,7 @@ public class PacketRedisCommunicator extends RedisPubSubAdapter<String, String> 
     /* Available channels */
     public static final String CHANNEL_PLAYER = "blockbind:player";
     public static final String CHANNEL_ENTITY = "blockbind:entity";
+    public static final String CHANNEL_BLOCK = "blockbind:block";
 
     private final RedisPubSubAsyncCommands<String, String> pubCmd;
     private final RedisPubSubAsyncCommands<String, String> subCmd;
